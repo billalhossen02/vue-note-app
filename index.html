@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue Note App</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">    <title>vue Calculator</title>
+</head>
+<body>
+
+    <div id="app">
+    <div class="container mt-4">
+        <h3>My Notes</h3>
+
+    <div class="card card-body" v-if="successText.length>0">
+        <div class="alert alert-success">
+            {{ successText }}
+        </div>
+    </div>
+
+    <div class="card card-body" v-if="errorText.length>0">
+        <div class="alert alert-danger">
+            {{ errorText }}
+        </div>
+    </div>
+    
+    <div class="card card-body m-2">
+        <div class="row">
+
+        <div class="col-sm-3 mt-3">
+           <p>Note Title - {{ title }}</p>
+           <input type="text" class="form-control" v-model="title">
+       </div>
+
+       <div class="col-sm-6 mt-4">
+        <p>Note Description - {{ description }}</p>
+        <textarea  v-model="description" class="form-control" cols="30" rows="5"></textarea>
+       </div>
+      
+
+       <div class="col-sm-3 mt-5">
+         <button id="add" class="btn-sm btn-outline-dark form-btn" v-on:click="addNote">Add note</button>   
+         <button id="update" class="btn-sm btn-outline-info form-btn" v-on:click="updateNote">Update note</button>   
+
+       </div>
+
+    </div>
+
+    </div>
+    
+     <div class="">
+ 
+        <table class="table table-bordered table-hover">
+
+            <thead>
+                <tr>
+                <th>Id</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Action</th>
+               </tr>
+            </thead>
+
+            <tbody v-for="(note, index) in notes.Notes">
+              <tr>
+                <td>{{ index+1 }}</td>
+                <td>{{ note.title }}</td>
+                <td>{{ note.description }}</td>
+                <td>
+                    <button class="btn-sm btn-warning mb-2" v-on:click="editNote(note)">Edit</button>
+                    <button class="btn-sm btn-danger mb-2" v-on:click="deleteNote(note.id)">Delete</button>
+                </td>
+             </tr>
+            </tbody>
+
+        </table>
+
+     </div>
+
+    </div>
+</div>
+<style>
+    th{ background-color: #367c91;color: white;}
+    .form-btn{position: absolute; bottom: 0;}
+    
+</style>  
+<script src="js/vue.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script>
+
+    $('#update').hide();
+    const url = "http://127.0.0.1:8000/api/allnote";
+        var app = new Vue({
+            el:"#app",
+            data:{
+                    id : "",
+                    title: "",
+                    description: "",
+                    notes:[],
+                    successText:"",
+                    errorText:""
+            },
+
+            mounted () {
+                var vm = this;
+                axios.get(url)
+                    .then(function (response) {
+                        vm.notes = response.data;
+                    })
+                
+            },
+
+
+            methods: {
+                addNote(){
+                    var title = this.title;
+                    var description = this.description;
+                    if(title.length > 0 && description.length > 0){
+                        let singleNote = {
+                            'title' : title,
+                            'description' : description,
+                        }
+
+                        axios.post('http://127.0.0.1:8000/api/addnote',singleNote)
+                        .then(function (response) {
+        
+                        })
+                        this.title = "";
+                        this.description = "";
+                        this.successText = "Note Added";
+                        
+                       
+
+                    }
+
+                    else
+                    {
+
+                    this.successText = "";
+                    this.errorText = "Add Your Data Carefully";
+                    return;
+
+                    }
+
+                    
+                },
+
+                deleteNote(noteIndex){
+                        axios.delete('http://127.0.0.1:8000/api/deletenote/'+noteIndex)
+                        .then(function (response) {
+                            
+                        })
+                   this.notes.Notes.splice(noteIndex,1);
+                   this.successText = "Note Deleted"
+
+                },
+
+                editNote(note){
+                    this.title = note.title;
+                    this.description = note.description;
+                    this.id = note.id;
+
+                    $('#add').hide();
+                    $('#update').show();
+
+                },
+
+                updateNote(){
+                    var id = this.id;
+                    var title =this.title;
+                    var description =this.description;
+                    if(title.length > 0 && description.length > 0){
+                        let singleNote = {
+                            'title' : title,
+                            'description' : description,
+                        }
+                        axios.post('http://127.0.0.1:8000/api/updatenote/'+id,singleNote)
+                        .then(function (response) {
+                        })
+                        // this.notes.push(singleNote);
+                        this.title = "";
+                        this.description = "";
+                        this.successText = "Note Updated";
+                }
+
+                else
+
+                    return;
+
+                    },
+            }
+        });
+
+
+</script>
+
+</body>
+</html>
